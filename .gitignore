@@ -1,2 +1,8 @@
 */target/**
+*.jar
 *.class
+*.war
+*.ear
+*.zip
+*.rar
+*/.idea/**
