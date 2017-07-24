@@ -8,11 +8,11 @@ case class Pos(row: Int, col: Int) {
 
 def terrainFunction(levelVector: Vector[Vector[Char]]): Pos => Boolean = {
 
-  def isValidPos(pos: Pos): Boolean = {
-    if (levelVector(pos.row)(pos.col) != '-')
-      true
-    else
-      false
+  def isValidPos(pos: Pos): Boolean = pos match {
+    case Pos(row, col) if (row <= -1 || col <= -1) => false
+    case Pos(row, col) if (row >= levelVector.length || col >= levelVector(row).length) => false
+    case Pos(row, col) if (levelVector(row)(col) != '-') => true
+    case _ => false
   }
 
   isValidPos
@@ -34,7 +34,7 @@ def findChar(c: Char, levelVector: Vector[Vector[Char]]): Pos = {
 
 type Terrain = Pos => Boolean
 
-val levelVector = Vector(Vector('S', 'T'), Vector('o', 'o'), Vector('o', 'o'), Vector('-', '-', '-'))
+val levelVector = Vector(Vector('S', 'T', 'o', 'o'), Vector('o', 'o', 'o', 'o'), Vector('o', 'o', 'o', 'o'), Vector('o', 'o', 'o', 'o'))
 lazy val terrain: Terrain = terrainFunction(levelVector)
 lazy val startPos: Pos = findChar('S', levelVector)
 lazy val goal: Pos = findChar('T', levelVector)
@@ -95,13 +95,13 @@ case class Block(b1: Pos, b2: Pos) {
     * which are inside the terrain.
     */
   def legalNeighbors: List[(Block, Move)] = {
-    val list = List[(Block, Move)]()
-    (this.left, this.up, this.right, this.down) match {
-      case (l, _, _, _) if l.isLegal => (l, Left) :: list
-      case (_, u, _, _) if u.isLegal => (u, Up) :: list
-      case (_, _, r, _) if r.isLegal => (r, Right) :: list
-      case (_, _, _, d) if d.isLegal => (d, Down) :: list
+
+    def ?(b: Block, move: Move): (Block, Move) = {
+      if (b.isLegal) (b, move)
+      else null
     }
+
+    (?(this.left, Left) :: ?(this.up, Up) :: ?(this.right, Right) :: ?(this.down, Down) :: Nil).filter(p => p != null)
   }
 
   /**
@@ -115,10 +115,12 @@ case class Block(b1: Pos, b2: Pos) {
   def isLegal: Boolean = terrain(b1) && terrain(b2)
 }
 
-terrainFunction(levelVector)(new Pos(3,1))
+terrainFunction(levelVector)(new Pos(3,4))
 
 findChar('T', levelVector)
 
-val b = new Block(new Pos(0,0), new Pos(1,0))
+val b = new Block(new Pos(1,1), new Pos(2,1))
+b.isStanding
+b.isLegal
 b.neighbors
 b.legalNeighbors

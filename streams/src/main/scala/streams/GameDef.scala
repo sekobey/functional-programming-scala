@@ -81,8 +81,7 @@ trait GameDef {
    * This function returns the block at the start position of
    * the game.
    */
-  def startBlock: Block = new Block(startPos, startPos)
-
+  def startBlock: Block = Block(startPos, startPos)
 
   /**
    * A block is represented by the position of the two cubes that
@@ -139,13 +138,15 @@ trait GameDef {
      * which are inside the terrain.
      */
     def legalNeighbors: List[(Block, Move)] = {
-      val list = List[(Block, Move)]()
-      (this.left, this.up, this.right, this.down) match {
-        case (l, _, _, _) if l.isLegal => (l, Left) :: list
-        case (_, u, _, _) if u.isLegal => (u, Up) :: list
-        case (_, _, r, _) if r.isLegal => (r, Right) :: list
-        case (_, _, _, d) if d.isLegal => (d, Down) :: list
-      }
+
+      for (neighbor <- neighbors; if (neighbor._1.isLegal)) yield neighbor
+// Alternative solution
+//      def ?(b: Block, move: Move): (Block, Move) = {
+//        if (b.isLegal) (b, move)
+//        else null
+//      }
+//
+//      (?(this.left, Left) :: ?(this.up, Up) :: ?(this.right, Right) :: ?(this.down, Down) :: Nil).filter(p => p != null)
     }
 
     /**

@@ -1,8 +1,10 @@
-*/target/**
+**/.idea/**
+**/target/**
+**/project/**
 *.jar
 *.class
 *.war
 *.ear
 *.zip
 *.rar
-*/.idea/**
+.DS_Store
