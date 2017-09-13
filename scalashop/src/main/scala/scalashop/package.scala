@@ -39,17 +39,43 @@ package object scalashop {
 
   /** Computes the blurred RGBA value of a single pixel of the input image. */
   def boxBlurKernel(src: Img, x: Int, y: Int, radius: Int): RGBA = {
-    val mask = Array((-1,-1), (0,-1), (1, -1),
-                     (-1, 0),         (1, 0),
-                     (-1, 1), (0, 1), (1, 1))
-    var i = 1
-    var j=0
-    while (i <= radius) {
-      while (j < mask.length) {
-        clamp()
+
+    def computeAveragePixel() = {
+
+      val mask = Array((-1, -1), (0, -1), (1, -1),
+                       (-1, 0),           (1, 0),
+                       (-1, 1),  (0, 1),  (1, 1))
+
+      var i = 1
+      var j = 0
+      val max = (src.height - 1) * src.width + (src.width - 1)
+      println(s"max:$max")
+      var (newRed, newGreen, newBlue, newAlpha) = (0, 0, 0, 0)
+      var neighborCount = 0
+      while (i <= radius) {
+        while (j < mask.length) {
+          val maskedX = mask(j)._1*i + x
+          val maskedY = mask(j)._2*i + y
+          val pos = maskedY * src.width + maskedX
+          if (pos == clamp(pos, 0, max) && maskedX < src.width && maskedY < src.height) {
+            println(s"($x,$y) pos:($maskedX,$maskedY) -> convertedPos: $pos")
+            newRed += red(src(maskedX, maskedY))
+            newGreen += green(src(maskedX, maskedY))
+            newBlue += blue(src(maskedX, maskedY))
+            newAlpha += alpha(src(maskedX, maskedY))
+            neighborCount += 1
+          }
+          j += 1
+        }
+        i += 1
+        j = 0
       }
+
+      rgba(newRed / neighborCount, newGreen / neighborCount, newBlue / neighborCount, newAlpha / neighborCount)
     }
-    ???
+
+    if (radius <= 0) src(x,y)
+    else computeAveragePixel()
   }
 
 }
