@@ -1,5 +1,4 @@
 
-import common._
 
 package object scalashop {
 
@@ -30,52 +29,44 @@ package object scalashop {
     else v
   }
 
+  def taskSplits(max: Int, numTasks: Int) = max match {
+    case x if x <= numTasks => Vector((0, max))
+    case _ =>
+      val range1 = 0 to (max - numTasks) by numTasks
+      val range2 = numTasks to max by numTasks
+
+      val splits = range1 zip range2
+      if (splits.last._2 < max) splits :+ (splits.last._2, max)
+      else splits
+  }
+
   /** Image is a two-dimensional matrix of pixel values. */
   class Img(val width: Int, val height: Int, private val data: Array[RGBA]) {
     def this(w: Int, h: Int) = this(w, h, new Array(w * h))
+
     def apply(x: Int, y: Int): RGBA = data(y * width + x)
+
     def update(x: Int, y: Int, c: RGBA): Unit = data(y * width + x) = c
   }
 
   /** Computes the blurred RGBA value of a single pixel of the input image. */
   def boxBlurKernel(src: Img, x: Int, y: Int, radius: Int): RGBA = {
 
-    def computeAveragePixel() = {
-
-      val mask = Array((-1, -1), (0, -1), (1, -1),
-                       (-1, 0),           (1, 0),
-                       (-1, 1),  (0, 1),  (1, 1))
-
-      var i = 1
-      var j = 0
-      val max = (src.height - 1) * src.width + (src.width - 1)
-      println(s"max:$max")
-      var (newRed, newGreen, newBlue, newAlpha) = (0, 0, 0, 0)
-      var neighborCount = 0
-      while (i <= radius) {
-        while (j < mask.length) {
-          val maskedX = mask(j)._1*i + x
-          val maskedY = mask(j)._2*i + y
-          val pos = maskedY * src.width + maskedX
-          if (pos == clamp(pos, 0, max) && maskedX < src.width && maskedY < src.height) {
-            println(s"($x,$y) pos:($maskedX,$maskedY) -> convertedPos: $pos")
-            newRed += red(src(maskedX, maskedY))
-            newGreen += green(src(maskedX, maskedY))
-            newBlue += blue(src(maskedX, maskedY))
-            newAlpha += alpha(src(maskedX, maskedY))
-            neighborCount += 1
-          }
-          j += 1
-        }
-        i += 1
-        j = 0
-      }
-
-      rgba(newRed / neighborCount, newGreen / neighborCount, newBlue / neighborCount, newAlpha / neighborCount)
+    def average(ints: Seq[Int]): Int = {
+      ints.sum / ints.size
     }
 
-    if (radius <= 0) src(x,y)
-    else computeAveragePixel()
+    val newChannels = for {
+      xNew <- clamp(x - radius, 0, src.width - 1) to clamp(x + radius, 0, src.width - 1)
+      yNew <- clamp(y - radius, 0, src.height - 1) to clamp(y + radius, 0, src.height - 1)
+    } yield (red(src(xNew, yNew)), green(src(xNew, yNew)), blue(src(xNew, yNew)), alpha(src(xNew, yNew)))
+
+    rgba(
+      average(newChannels.map(_._1)),
+      average(newChannels.map(_._2)),
+      average(newChannels.map(_._3)),
+      average(newChannels.map(_._4))
+    )
   }
 
 }
