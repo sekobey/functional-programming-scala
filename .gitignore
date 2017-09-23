@@ -6,3 +6,5 @@
 *.zip
 *.rar
 */.idea/**
+.idea
+.project
