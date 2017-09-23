@@ -54,11 +54,11 @@ trait StringParserTerrain extends GameDef {
    */
   def terrainFunction(levelVector: Vector[Vector[Char]]): Pos => Boolean = {
 
-    def isValidPos(pos: Pos): Boolean = {
-      if (levelVector(pos.row)(pos.col) != '-')
-        true
-      else
-        false
+    def isValidPos(pos: Pos): Boolean = pos match {
+      case Pos(row, col) if (row <= -1 || col <= -1) => false
+      case Pos(row, col) if (row >= levelVector.length || col >= levelVector(0).length) => false
+      case Pos(row, col) if (levelVector(row)(col) != '-') => true
+      case _ => false
     }
 
     isValidPos
